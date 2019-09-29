@@ -1,0 +1,170 @@
+---
+title: "Data 607 Week 5"
+author: "Maryluz Cruz"
+date: "9/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Add the libraries required to do this assignment
+For this assignment we need tidyr and dplyr
+
+```{r}
+require(tidyr)
+```
+
+```{r}
+require(dplyr)
+```
+
+```{r}
+require(tidyverse)
+```
+
+## (1) Create a .CSV file (or optionally, a MySQL database!) that includes all of the information above. You’re encouraged to use a “wide” structure similar to how the information appears above, so that you can practice tidying and transformations as described below.
+
+This DataSet was created in Excel and uploaded into my GitHub
+
+
+```{r}
+airportdata <-   read.csv("https://raw.githubusercontent.com/Luz917/data607Week5/master/airport%20data.csv",stringsAsFactors = FALSE)
+str(airportdata)
+```
+
+
+
+```{r}
+summary(airportdata)
+```
+
+```{r}
+airportdata
+```
+
+## Prepare the Table 
+
+Before we begin to use tidyr and dplyr we need to do a feew thingsa to set up the table.
+-Name all of the Columns 
+-Fill in the empty spaces in the first column with the name of each airport
+-Then remove the third row 
+
+```{r}
+colnames(airportdata)<-c("Airport", "FlightStatus","Los.Angelos","Phoenix","San.Diego","San.Francisco","Seattle")
+airportdata [2,1]<-"ALASKA"
+airportdata [5,1]<-"AM WEST"
+airportdata = airportdata[-c(3) , ]
+airportdata
+                          
+```
+
+
+## Tidyr
+
+(2) Read the information from your .CSV file into R, and use tidyr and dplyr as needed to tidy and transform your data.
+
+We begin the transformation, we begin by putting states into a column by using pivot_longer. (source is on the bottom)
+
+```{r}
+airportdata <- pivot_longer(airportdata, cols = -c("Airport","FlightStatus"), names_to = "States")
+airportdata
+```
+
+As you can see we end up with 20 rows
+
+
+Next we use pivit_wider so we can see On Time and Delayed Status by Airport and City
+
+```{r}
+airportdata %>%
+  pivot_wider(names_from = FlightStatus, values_from = value) %>%
+  arrange(States)
+```
+Now there are 10 Rows
+
+
+## Data Analysis with dplyr
+
+(3) Perform analysis to compare the arrival delays for the two airlines.
+
+## Sum of Flights by Airport
+
+```{r}
+airportdata %>%
+  group_by(Airport)%>%
+  summarise(AirportSum= sum(value))
+
+```
+AM West has more flights then Alaska
+
+
+## Sum of Flights By State
+
+```{r}
+airportdata %>%
+  group_by(States) %>%
+  summarise(SumFlights= sum(value))
+```
+Phoenix has the most flights by state
+
+## Sum of Flight Status by Airport
+
+```{r}
+airportdata %>%
+  group_by(Airport,FlightStatus) %>%
+  summarise(SumofFlights= sum(value))
+```
+AM West has the highest delay rate, but they also have a high number of On Time flights
+
+## Average Number of Flights 
+
+```{r}
+airportdata %>%
+  group_by(Airport,FlightStatus) %>%
+  summarise(AvgFlights= mean(value))
+```
+AM West has the highest average number of Flights
+
+
+## Max Number of Flights by State
+
+```{r}
+airportdata %>%
+  group_by(Airport,States) %>%
+  summarise(MaxFlights= max(value))
+
+```
+Phoenix has the Max Number of Flights 
+
+## Max Number of Flights by Airport
+```{r}
+airportdata %>%
+  group_by(Airport) %>%
+  summarise(MaxFlights= max(value))
+
+```
+AM West has the Max Number of Flights 
+
+
+## Percent Rank
+```{r}
+airportdata %>%
+  mutate(Flights= percent_rank(value)) %>%
+  arrange(States)
+```
+Seattle had the highest Percent Rank
+
+## Conclusion
+We can tell by the Analysis that AM West gets more flights in comparison to Alaska. Phoenix has the highest number of flights out of all of the States. 
+
+## Sources
+1. How to reshape a dataframe from wide to long or long to wide format using tidyr - pivot_longer() pivot_wider()
+https://www.programmingwithr.com/how-to-reshape-a-dataframe-from-wide-to-long-or-long-to-wide-format/
+
+2.Hands-on dplyr tutorial for faster data manipulation in R
+https://www.dataschool.io/dplyr-tutorial-for-faster-data-manipulation-in-r/   
+
+3.How do I delete rows in a data frame?
+https://stackoverflow.com/questions/12328056/how-do-i-delete-rows-in-a-data-frame
